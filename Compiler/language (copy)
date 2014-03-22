@@ -1,0 +1,88 @@
+stmts` -> declarationList
+
+declarationList -> declarationList declaration
+declarationList -> declaration
+declaration -> var-declaration
+declaration -> fun-declaration
+
+var-declaration -> type-specifier var-decl-list ';'
+var-decl-list -> var-decl-list ',' var-decl-initialize
+var-decl-list -> var-decl-initialize
+var-decl-initialize -> var-decl-id
+var-decl-id -> 'ID'
+var-decl-id -> 'ID' '[' 'num' ']'
+
+type-specifier -> 'int'
+type-specifier -> 'double'
+type-specifier -> 'char'
+
+fun-declaration -> type-specifier 'ID' '(' param-list ')' statement
+fun-declaration -> type-specifier 'ID' '(' ')' statement
+
+param-list -> param-list ',' param-type-list 
+param-list -> param-type-list
+param-type-list -> type-specifier param-id
+param-id -> 'ID'
+param-id -> 'ID' '[' ']'
+
+statement -> expression-stmt
+statement -> compound-stmt
+statement -> selection-stmt
+statement -> iteration-stmt
+statement -> return-stmt
+statement -> break-stmt
+compound-stmt -> '{' local-declarations statement-list '}'
+compound-stmt -> '{' local-declarations '}'
+compound-stmt -> '{' statement-list '}'
+compound-stmt -> '{' '}'
+local-declarations -> var-declaration
+local-declarations -> local-declarations var-declaration
+statement-list -> statement-list statement
+statement-list -> statement
+expression-stmt -> expression ';'
+expression-stmt -> ';'
+selection-stmt -> 'if' '(' simple-expression ')' statement
+iteration-stmt -> 'while' '(' simple-expression ')' statement
+return-stmt -> 'return' ';'
+return-stmt -> 'return' expression ';'
+break-stmt -> 'break' ';'
+
+expression -> mutable '=' expression
+expression -> simple-expression
+simple-expression -> simple-expression '||' and-expression 
+simple-expression -> and-expression
+and-expression -> and-expression '&&' unary-rel-expression
+and-expression -> unary-rel-expression
+unary-rel-expression -> '!' unary-rel-expression
+unary-rel-expression -> rel-expression
+rel-expression -> sum-expression relop sum-expression
+rel-expression -> sum-expression
+relop -> '<='
+relop -> '<'
+relop -> '>'
+relop -> '>=' 
+relop -> '=='
+relop -> '!='
+sum-expression -> sum-expression sumop term 
+sum-expression -> term
+sumop -> '+'
+sumop -> '-'
+term -> term mulop unary-expression
+term -> unary-expression
+mulop -> '*'
+mulop -> '/'
+mulop -> '%'
+unary-expression -> immutable
+unary-expression -> mutable
+mutable -> 'ID'
+mutable -> 'ID' '[' expression ']'
+immutable -> '(' expression ')'
+immutable -> call
+immutable -> constant
+call -> 'ID' '(' arg-list ')'
+call -> 'ID' '(' ')'
+arg-list -> arg-list ',' 'ID'
+arg-list -> arg-list ',' constant
+arg-list -> 'ID'
+arg-list -> constant
+constant -> 'num'

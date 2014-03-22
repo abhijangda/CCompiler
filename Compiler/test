@@ -1,0 +1,9 @@
+void printf ( char str [ ] , int d ) ;
+
+int main ( )
+{
+    int a ;
+    a = 8 + 9 ;
+    printf ( "Hello World" ) ;
+}
+$
