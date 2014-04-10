@@ -558,4 +558,3 @@ namespace Compiler
 		}
 	}
 }
-

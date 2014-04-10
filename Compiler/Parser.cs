@@ -76,9 +76,10 @@ namespace Compiler
 		}
 		private ASTNode getNode (Production p, SymbolTable symTable)
 		{
-
 			if (p.head.ToString () == "type-specifier")
 				return new TypeNode ();
+			if (p.head.ToString () == "arg-list")
+				return new FunctionCallArgument ();
 			if (p.body.Count == 1 && !(p.body [0] is Terminal))
 				return null;
 			if (p.head.ToString () == "param-id")
@@ -128,9 +129,6 @@ namespace Compiler
 			if (p.head.ToString () == "call")
 				return new FunctionCall ();
 
-			if (p.head.ToString () == "arg-list")
-				return new FunctionCallArgument ();
-
 			if (((p.head.ToString () == "var-decl-id" ||
 			    p.head.ToString () == "mutable")) &&
 			    p.body.Count > 1)
@@ -145,7 +143,6 @@ namespace Compiler
 			string sym_str = "";
 			sym_str = t.ToString ();
 			Stack <string> symbolsStack = new Stack<string> ();
-			//Stack <ASTNode> nodeStack = new Stack<ASTNode> ();
 			SymbolTable currentSymTable = symTableTree;
 			Stack <ASTNode> nodeStack = new Stack<ASTNode> ();
 			SymbolTable paramTable = new SymbolTable ();
@@ -153,8 +150,6 @@ namespace Compiler
 			if (t!= null && t.tag == Tag.ID)
 			{
 				sym_str = "ID";
-				//idStack.Push (t.ToString ());
-				//nodeStack.Push (new IDNode (t.ToString ()));
 				nodeStack.Push (new IDNode (t.ToString ()));
 			}
 			else if (t != null && t.tag == Tag.Character)
@@ -165,8 +160,6 @@ namespace Compiler
 			else if (t != null && t.tag == Tag.Number)
 			{
 				sym_str = "num";
-				//numStack.Push (t.ToString ());
-				//nodeStack.Push (new NumExprNode (t.ToString ()));
 				nodeStack.Push (new NumExprNode (t.ToString ()));
 			}
 
@@ -176,15 +169,9 @@ namespace Compiler
 				nodeStack.Push (new TokenNode (t));
 			}
 
-			//Console.WriteLine ("Pushing into nodeStack " + nodeStack.Peek ().ToString ());
-
 			while (true)
 			{
-				ActionTable.Action action = null;
-
-				//if (t!= null)
-				//	Console.WriteLine ("symstr " + sym_str + " " + t.ToString ());
-	
+				ActionTable.Action action = null;	
 				action = g.actionTable.getAction (sym_str, stackStates.Peek ());
 
 				if (action == null)
@@ -194,23 +181,17 @@ namespace Compiler
 					else
 						Console.WriteLine ("Error with action " + sym_str + " " + stackStates.Peek ());
 
-//					Console.WriteLine ("wrwedfffffffffffffff");
-//					foreach (Terminal to in g.firstDict ["blockstmt"])
-//						Console.Write (to + " ");
-//					Console.WriteLine ("FFFFFFFFFFF");
 					return null;
 				}
 
 				if (action.type == ActionTable.Action.ActionType.Shift)
 				{
 					stackStates.Push (action.toState);
-					//Console.WriteLine ("Pushing " + action.toState);
 					t = lexer.scan ();
-					//Console.WriteLine ("Readed " + t.ToString ());
+
 					if (t!= null && t.tag == Tag.ID)
 					{
 						sym_str = "ID";
-						//idStack.Push (t.ToString ());
 						nodeStack.Push (new IDNode (t.ToString ()));
 					}
 					else if (t != null && t.tag == Tag.Character)
@@ -226,7 +207,6 @@ namespace Compiler
 					else if (t != null && (t.tag == Tag.Number || t.tag == Tag.Real))
 					{
 						sym_str = "num";
-						//numStack.Push (t.ToString ());
 						nodeStack.Push (new NumExprNode (t.ToString ()));
 					}
 
@@ -237,21 +217,16 @@ namespace Compiler
 							nodeStack.Push (new TokenNode (t));
 					}
 
-					//if (t != null && t.ToString () != "$")
-					//	Console.WriteLine ("Pushing into nodeStack " + sym_str + " " + nodeStack.Peek ().ToString ());
-
 					if (sym_str == "{")
 					{
 						SymbolTable symTable = new SymbolTable (currentSymTable);
 						currentSymTable.children.Add (symTable);
 						currentSymTable = symTable;
-						//Console.WriteLine (" CREATING SYM TABLE ");
 					}
 
 					else if (sym_str == "}")
 					{
 						currentSymTable = currentSymTable.parent;
-						//Console.WriteLine (" PARENTING SYMBOL TABLE ");
 					}
 				}
 
@@ -275,7 +250,6 @@ namespace Compiler
 							nodesToReduce.Add (n);
 						}
 					}
-					//Console.WriteLine ("GOT " + p + " " + nodesToReduce.Count);
 
 					TypeNode typeNode = null;
 
@@ -297,25 +271,24 @@ namespace Compiler
 
 					if (p.head.ToString () == "var-declaration")
 					{
+						Console.WriteLine ("got var declaration");
 						for (int j = 0; j < nodesToReduce.Count; j++)
 						{
 							ASTNode node = nodesToReduce [j];
 							if (node is IDArrayNode)
 							{
+								Console.WriteLine ("node is IDArrayNode");
 								int width = -1, k;
-								for (k = 0; k < node.listNodes.Count; k++)
+								IDArrayNode arraynode = (IDArrayNode)node;
+								if (((IDArrayNode)node).index is NumExprNode)
 								{
-									if (node.listNodes [k] is NumExprNode)
-									{
-										width = int.Parse (((NumExprNode)node.listNodes [k]).value);
-									}
-									else if (node.listNodes [k] is ExprNode)
-									{
-										width = -2;
-									}
+									width = int.Parse (((NumExprNode)arraynode.index).value);
+								}
+								else if (((IDArrayNode)node).index is ExprNode)
+								{
+									width = -2;
 								}
 
-								//Console.WriteLine ("WIDTH IS " + width);
 								if (width > -1)
 								{
 									currentSymTable.put (((IDNode)node).id, new ArrayType (typeNode.type, width));
@@ -324,14 +297,12 @@ namespace Compiler
 								{
 									currentSymTable.put (((IDNode)node).id, 
 									                     new ArrayType (typeNode.type,
-									                                    (ExprNode)node.listNodes [k]));
+									               			((IDArrayNode)node).index));
 								}
-
 							}
 							else if (node is IDNode)
 							{
 								currentSymTable.put (((IDNode)node).id, typeNode.type);
-								//Console.WriteLine ("putting " + ((IDNode)((StatementNode)node).listNodes [0]).id + " with " + type.ToString ());
 							}
 						}
 					}
@@ -344,7 +315,6 @@ namespace Compiler
 							if (node is FunctionParamsNode)
 							{
 								paramTable.put (((IDNode)((FunctionParamsNode)node).listNodes [1]).id, typeNode.type);
-								//Console.WriteLine ("putting PARAM" + (param_id)node + " with " + type.ToString ());
 							}
 						}
 					}
@@ -367,8 +337,10 @@ namespace Compiler
 											{
 												listTypes.Add (((TypeNode)node3.listNodes [0]).type);
 												if (p.head.ToString () == "fun-definition")
+												{
 													currentSymTable.children [currentSymTable.children.Count - 1].put (((IDNode)node3.listNodes [1]).id, 
 													                                                                   ((TypeNode)node3.listNodes [0]).type);
+												}
 											}
 										}
 									}
@@ -377,16 +349,18 @@ namespace Compiler
 									{
 										listTypes.Add (((TypeNode)node2.listNodes [0]).type);
 										if (p.head.ToString () == "fun-definition")
-											currentSymTable.children [currentSymTable.children.Count - 1].put (((IDNode)node2.listNodes [1]).id, ((TypeNode)node2.listNodes [0]).type);
+										    currentSymTable.children [currentSymTable.children.Count - 1].put (((IDNode)node2.listNodes [1]).id, ((TypeNode)node2.listNodes [0]).type);
 									}
 								}
 
-								//Console.WriteLine ("PUTTING FUNCTION TYPE " + typeNode.type.ToString ());
 								try
 								{
 									if (p.head.ToString () == "fun-definition")
+									{
+										currentSymTable.children [currentSymTable.children.Count - 1].func = ((IDNode)node).id;
 										currentSymTable.put (((IDNode)node).id, new FunctionType(typeNode.type, listTypes, 
 									                                                         FunctionType.DeclarationType.Definition));
+									}
 									else
 										currentSymTable.put (((IDNode)node).id, new FunctionType(typeNode.type, listTypes, 
 									                                                         FunctionType.DeclarationType.Declaration));
@@ -399,15 +373,11 @@ namespace Compiler
 										type.decl_type = FunctionType.DeclarationType.Definition;
 									else
 									{
-										//Console.WriteLine ("Error, function " + ((IDNode)node).id + " defined twice");
 										return null;
 									}
 								}
 
-								//currentSymTable.children [currentSymTable.children.Count - 1].addFromTable (paramTable);
-
 								paramTable = new SymbolTable ();
-								//Console.WriteLine ("putting " + (IDNode)node + " with " + typeNode.type.ToString ());
 							}
 						}
 					}
@@ -429,8 +399,6 @@ namespace Compiler
 
 				else if (action.type == ActionTable.Action.ActionType.Accept)
 				{
-					//Console.WriteLine ("Accepted");
-					//Console.WriteLine ("ASTNode stack count is " + nodeStack.Count);
 					nodeStack.Peek ().travelNode ();
 					symTableTree.print ();
 					return nodeStack.Peek ();
@@ -500,6 +468,20 @@ namespace Compiler
 					Type t1 = n1.getType (currSymTable);
 					Type t2 = n2.getType (currSymTable);
 					Type t = t1;
+					if (t2 is ArrayType)
+					{
+						if (!(t1 is ArrayType))
+						{
+							Console.WriteLine ("Expected Array Type");
+							Environment.Exit (1);
+						}
+						else if (((ArrayType)t2).type != ((ArrayType)t1).type)
+						{
+							Console.WriteLine ("Expected array of " + ((ArrayType)t2).type.tag);
+							Environment.Exit (1);
+						}
+					}
+
 					if (t1 != t2)
 					{
 						t = Type.min (t1, t2);
@@ -517,10 +499,10 @@ namespace Compiler
 				{
 					if (node.listNodes [i] is FunctionCallArgument)
 					{
-						TypeNode tnode = (TypeNode)node.listNodes [i].listNodes [0];
-						if (type.listParamTypes [j] != tnode.type)
+						Type tnodetype = currSymTable.getType (node.listNodes [i].listNodes [0].ToString ());
+						if (type.listParamTypes [j] != tnodetype)
 						{
-							Type t = Type.max (type.listParamTypes [j], tnode.type);
+							Type t = Type.max (type.listParamTypes [j], tnodetype);
 							if (t == type.listParamTypes [j])
 								((ExprNode)node.listNodes [i]).castTo = t;
 

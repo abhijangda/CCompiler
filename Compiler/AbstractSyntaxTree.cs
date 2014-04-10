@@ -550,8 +550,8 @@ namespace Compiler
 		{
 			currentLabel = generateLabel ();
 			endLabel = generateLabel ();
-			return currentLabel + ":\n" + "IfFalse " + listNodes [0].generateCode (symTable) + " goto " + endLabel +
-				listNodes [1].generateCode (symTable) + "\n" + endLabel + ":\n";
+			return currentLabel + ":\n" + "IfFalse " + expr.generateCode (symTable) + " goto " + endLabel + "\n" +
+				stmt.generateCode (symTable) + "goto " + currentLabel + "\n" + endLabel + ":\n";
 		}
 	}
 
@@ -571,6 +571,15 @@ namespace Compiler
 				if (n is IDNode)
 					id = (IDNode)n;
 			}
+		}
+
+		public override void travelNode (int level)
+		{
+			for (int i = 0; i < level * 2; i++)
+				Console.Write (" ");
+			Console.WriteLine ("DeclarationNode ");
+			type.travelNode (level + 1);
+			id.travelNode (level + 1);
 		}
 	}
 
@@ -616,9 +625,9 @@ namespace Compiler
 		public override string generateCode (SymbolTable symTable)
 		{
 			if (expr == null)
-				return "return ";
+				return "return \n";
 			else
-				return "return " + expr.generateCode (symTable);
+				return "return " + expr.generateCode (symTable) + "\n";
 		}
 	}
 
@@ -648,20 +657,6 @@ namespace Compiler
 		public override string generateCode (SymbolTable symTable)
 		{
 			string s = "";
-			Dictionary <string, Type>.Enumerator e = symTable.dict.GetEnumerator ();
-			do
-			{
-				if (e.Current.Value != null)
-				{
-					if (e.Current.Value is FunctionType)
-					{
-						FunctionType ftype = (FunctionType)e.Current.Value;
-						if (ftype.decl_type == FunctionType.DeclarationType.Declaration)
-							s += "extern " + e.Current.Key + "\n";
-					}
-				}
-			}
-			while (e.MoveNext ());
 			return s + expr.generateCode (symTable);
 		}
 	}
@@ -690,7 +685,7 @@ namespace Compiler
 		{
 			for (int i = 0; i < level * 2; i++)
 				Console.Write (" ");
-			Console.WriteLine ("FunctionNode " + id.ToString () + returnType.ToString ());
+			Console.WriteLine ("FunctionNode " + id.id.ToString () + " " + returnType.ToString ());
 			if (paramsList != null)
 				paramsList.travelNode (level + 1);
 			stmt.travelNode (level + 1);
@@ -698,7 +693,11 @@ namespace Compiler
 
 		public override string generateCode (SymbolTable symTable)
 		{
-			return id.generateCode (symTable) + ":\n" + stmt.generateCode (symTable);
+			string toReturn = "func " + id.generateCode (symTable) + ":\n";
+			toReturn += stmt.generateCode (symTable);
+			if (!toReturn.Substring (toReturn.TrimEnd ().LastIndexOf ("\n")+1).Contains ("return"))
+				toReturn += "return\n";
+			return toReturn;
 		}
 
 		public override void addNodes (List<ASTNode> nodes)
@@ -728,7 +727,7 @@ namespace Compiler
 		}
 	}
 
-	public class VariableDeclarationNode : StatementNode
+	public class VariableDeclarationNode : DeclarationNode
 	{
 		public override string generateCode (SymbolTable symTable)
 		{
@@ -824,7 +823,7 @@ namespace Compiler
 			{
 				if (n is FunctionCallArgument)
 				{
-					toReturn += "param " + n.generateCode (symTable);
+					toReturn += n.generateCode (symTable);
 					length++;
 				}
 				else if (n is IDNode)
@@ -833,7 +832,7 @@ namespace Compiler
 				}
 			}
 
-			toReturn = "call " + id.generateCode (symTable) + ", " + length + "\n" + toReturn;
+			toReturn = "call " + id.generateCode (symTable) + "\n" + toReturn;
 			return toReturn;
 		}
 	}
@@ -852,7 +851,15 @@ namespace Compiler
 
 		public override string generateCode (SymbolTable symTable)
 		{
-			return listNodes [0].generateCode (symTable);
+			string toReturn = "";
+			foreach (ASTNode n in listNodes)
+			{
+				if (n is FunctionCallArgument)
+					toReturn += n.generateCode (symTable);
+				else if (n is ExprNode)
+					toReturn += "param " + n.generateCode (symTable) + "\n";
+			}
+			return toReturn;
 		}
 	}
 
@@ -870,7 +877,7 @@ namespace Compiler
 		{
 			for (int i = 0; i < level * 2; i++)
 				Console.Write (" ");
-			Console.Write ("ArrayNode id = " + id);
+			Console.WriteLine ("ArrayNode id = " + id);
 			if (index != null)
 				index.travelNode (level + 1);
 		}
@@ -917,4 +924,3 @@ namespace Compiler
 		}
 	}
 }
-

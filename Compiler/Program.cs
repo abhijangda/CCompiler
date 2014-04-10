@@ -39,8 +39,8 @@ namespace Compiler
 			//Console.WriteLine (codeGen.generate ());
 			InterCodeGen intercodegen = new InterCodeGen (p.startParsing (), p.symTableTree);
 			string intercode = intercodegen.generate ();
-			Console.WriteLine (intercode);
-			//Console.WriteLine (new MachineCodeGen (intercode).genMachinCode ());
+			Console.WriteLine ("\n" + intercode + "\n");
+			Console.WriteLine (new MachineCodeGen (intercode).genMachinCode (p.symTableTree));
 		}
 	}
 }

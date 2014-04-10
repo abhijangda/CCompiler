@@ -45,12 +45,28 @@ namespace Compiler
 		public List<SymbolTable> children;
 		public Dictionary <string, Type> dict {get; private set;}
 		protected SymbolTable prev;
+		public string func;
 
 		public SymbolTable (SymbolTable parent = null)
 		{
 			dict = new Dictionary<string, Type> ();
 			this.parent = parent;
 			children = new List<SymbolTable> ();
+		}
+
+		public SymbolTable getFuncTable (string func)
+		{
+			if (this.func == func)
+				return this;
+
+			foreach (SymbolTable symTable in children)
+			{
+				SymbolTable table = symTable.getFuncTable (func);
+				if (table != null)
+					return table;
+			}
+
+			return null;
 		}
 
 		public void put (string w, Type t)
@@ -113,6 +129,7 @@ namespace Compiler
 
 		public void print (int level = 0)
 		{
+			Console.WriteLine ("FUNC IS "+func);
 			Dictionary <string, Type>.Enumerator e = dict.GetEnumerator ();
 			do
 			{

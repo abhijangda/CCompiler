@@ -450,36 +450,7 @@ namespace LanguageGrammar
 				addToDict (m.Value);
 			}
 
-			/*addToDict ("ID -> ID ID");
-			foreach (char c in "ABCDEFGHIJKLMNOP1234567890_")
-			{
-				addToDict ("ID -> '" + c.ToString () + "'");
-			}
-
-			addToDict ("num -> num num");
-			foreach (char c in "1234567890")
-			{
-				addToDict ("num -> '" + c.ToString ()  + "'");
-			}*/
-
-			/*foreach (Symbol sym in listSymbol)
-				Console.WriteLine ("ff "+ sym);
-			Dictionary<string, List<Production>>.Enumerator e = dict.GetEnumerator ();
-			KeyValuePair <string, List<Production>> pair;
-			do
-			{
-				pair = e.Current;
-				if (pair.Value != null)
-				{
-					foreach (Production p in pair.Value)
-					{
-					    Console.WriteLine ("Key is" + pair.Key + "Value is " + p.ToString ());
-					}
-				}
-			}
-			while (e.MoveNext ());*/
 			stringRep = s;
-
 			gotoTable = new GoToTable ();
 		}
 
@@ -510,8 +481,6 @@ namespace LanguageGrammar
 								//As here no production derives empty string hence 
 								//no need to create a new NonTerminal of beta a
 								listFirstTerminal = First (beta);
-								//foreach (Terminal b in listFirstTerminal)
-								//	Console.Write (" " + b + " ");
 							}
 
 							else
@@ -546,16 +515,6 @@ namespace LanguageGrammar
 				//Console.WriteLine (i);
 				i++;
 			}
-
-
-			/*if (listItem.stateNumber == 16)
-			{
-				Console.Write ("CLOSURE OF th " + listItem.stateNumber);
-				foreach (Item item2 in listItem)
-					Console.Write (item2 + "   ");
-			}*/
-
-
 		}
 
 		public State goTo (State I, Symbol X)
@@ -632,7 +591,6 @@ namespace LanguageGrammar
 								break;
 							}
 						}
-
 
 //						Console.WriteLine ("present is " + isSameItem);
 						if (!listState [i].dictStateOnSymbol.ContainsKey (s.ToString ()))
@@ -736,17 +694,6 @@ namespace LanguageGrammar
 			}
 		}
 
-		public void mergeStates ()
-		{
-			foreach (State st in listState)
-			{
-				foreach (State st2 in listState)
-				{
-
-				}
-			}
-		}
-
 		public void displayStates ()
 		{
 			foreach (State sta in listState)
@@ -766,4 +713,3 @@ namespace LanguageGrammar
 		}
 	}
 }
-

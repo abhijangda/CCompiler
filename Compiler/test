@@ -1,9 +1,20 @@
 void printf ( char str [ ] , int d ) ;
 
+int f ( )
+{
+    int l ;
+    l = 10 ;
+    return l ;
+}
+
 int main ( )
 {
-    int a ;
-    a = 8 + 9 ;
-    printf ( "Hello World" ) ;
+    char s [ 3 ] ;
+    int i ;
+    i = 0 ;
+    s = "%d" ;
+    
+    printf ( s , i ) ;
+
 }
 $
